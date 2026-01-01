@@ -5,8 +5,14 @@ import { Separator } from '@/components/ui/separator';
 import { applyDynamicStyles } from '@/composables/useCspNonce';
 import type { SiteSettings } from '@/types';
 import { usePage } from '@inertiajs/vue3';
+import hljs from 'highlight.js';
 import { CheckIcon, CopyIcon, DownloadIcon } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+
+// Register language aliases for common file types not natively supported
+hljs.registerAliases(['env', 'dotenv'], { languageName: 'ini' });
+hljs.registerAliases(['conf', 'config'], { languageName: 'ini' });
+hljs.registerAliases(['txt', 'text'], { languageName: 'plaintext' });
 
 const page = usePage();
 const siteSettings = computed(() => page.props.siteSettings as SiteSettings | undefined);
@@ -137,8 +143,66 @@ const addLineNumbers = () => {
   });
 };
 
+const slugify = (text: string): string => {
+  return text
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase()
+    .replace(/^-+|-+$/g, '');
+};
+
+const addHeadingIds = () => {
+  if (!contentRef.value) {
+    return;
+  }
+
+  const idCounts = new Map<string, number>();
+  const headings = contentRef.value.querySelectorAll('h1, h2, h3');
+
+  headings.forEach((heading) => {
+    if (heading.id) {
+      return;
+    }
+    const text = heading.textContent || '';
+    const baseId = slugify(text);
+
+    // Track occurrences and append suffix for duplicates
+    const count = idCounts.get(baseId) || 0;
+    idCounts.set(baseId, count + 1);
+
+    heading.id = count === 0 ? baseId : `${baseId}-${count}`;
+  });
+};
+
+const applySyntaxHighlighting = () => {
+  if (!contentRef.value) {
+    return;
+  }
+
+  const codeBlocks = contentRef.value.querySelectorAll('pre code');
+  codeBlocks.forEach((block) => {
+    if (block.classList.contains('hljs')) {
+      return;
+    }
+
+    // Get language from class (e.g., 'language-javascript' -> 'javascript')
+    const langClass = Array.from(block.classList).find((c) => c.startsWith('language-'));
+    const language = langClass?.replace('language-', '');
+
+    // Check if language is supported, fallback to plaintext if not
+    if (language && !hljs.getLanguage(language)) {
+      block.classList.remove(langClass!);
+      block.classList.add('language-plaintext');
+    }
+
+    hljs.highlightElement(block as HTMLElement);
+  });
+};
+
 onMounted(() => {
   nextTick(() => {
+    addHeadingIds();
+    applySyntaxHighlighting();
     addCopyButtons();
     addLineNumbers();
   });
@@ -148,6 +212,8 @@ watch(
   () => props.content,
   () => {
     nextTick(() => {
+      addHeadingIds();
+      applySyntaxHighlighting();
       addCopyButtons();
       addLineNumbers();
     });
@@ -157,26 +223,43 @@ watch(
 
 <template>
   <article class="prose max-w-none prose-slate dark:prose-invert">
-    <header v-if="title" class="mb-8 space-y-2">
-      <div class="flex items-start justify-between gap-4">
-        <h1 class="text-3xl font-bold tracking-tight">{{ title }}</h1>
-        <div class="flex shrink-0 items-center gap-2">
-          <Button v-if="hasEditLink" variant="outline" size="sm" as-child>
+    <header v-if="title" class="mb-6 space-y-3 sm:mb-8 sm:space-y-2">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{{ title }}</h1>
+        <div class="flex flex-wrap items-center gap-2">
+          <Button
+            v-if="hasEditLink"
+            variant="outline"
+            size="sm"
+            class="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+            as-child
+          >
             <a :href="editOnGithubUrl" target="_blank" rel="noopener noreferrer">
-              <GithubIcon class="mr-2 h-4 w-4" />
-              Edit on GitHub
+              <GithubIcon class="h-4 w-4 sm:mr-2" />
+              <span class="hidden sm:inline">Edit on GitHub</span>
             </a>
           </Button>
 
-          <Button variant="outline" size="sm" @click="copyPageContent">
-            <CheckIcon v-if="copiedPage" class="mr-2 h-4 w-4 text-green-500" />
-            <CopyIcon v-else class="mr-2 h-4 w-4" />
-            {{ copiedPage ? 'Copied!' : 'Copy page' }}
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+            @click="copyPageContent"
+          >
+            <CheckIcon v-if="copiedPage" class="h-4 w-4 text-green-500 sm:mr-2" />
+            <CopyIcon v-else class="h-4 w-4 sm:mr-2" />
+            <span class="hidden sm:inline">{{ copiedPage ? 'Copied!' : 'Copy page' }}</span>
           </Button>
 
-          <Button variant="outline" size="sm" @click="downloadPageContent" title="Download as TXT">
-            <DownloadIcon class="mr-2 h-4 w-4" />
-            Download
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+            @click="downloadPageContent"
+            title="Download as TXT"
+          >
+            <DownloadIcon class="h-4 w-4 sm:mr-2" />
+            <span class="hidden sm:inline">Download</span>
           </Button>
         </div>
       </div>

@@ -35,8 +35,40 @@
     @inertia
 
 
-    @if(auth()->guest() && app()->environment('production') && false)
+    {{-- Analytics - only for guests in production --}}
+    @if(auth()->guest() && app()->environment('production'))
+        @php
+            $ga4Id = \App\Models\Setting::get('advanced_analytics_ga4_id');
+            $plausibleDomain = \App\Models\Setting::get('advanced_analytics_plausible_domain');
+            $clarityId = \App\Models\Setting::get('advanced_analytics_clarity_id');
+        @endphp
 
+        {{-- Google Analytics 4 --}}
+        @if($ga4Id)
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $ga4Id }}"></script>
+            <script nonce="{{ app('csp-nonce') }}">
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '{{ $ga4Id }}');
+            </script>
+        @endif
+
+        {{-- Plausible Analytics --}}
+        @if($plausibleDomain)
+            <script defer data-domain="{{ $plausibleDomain }}" src="https://plausible.io/js/script.js"></script>
+        @endif
+
+        {{-- Microsoft Clarity --}}
+        @if($clarityId)
+            <script nonce="{{ app('csp-nonce') }}">
+                (function(c,l,a,r,i,t,y){
+                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "{{ $clarityId }}");
+            </script>
+        @endif
     @endif
 </body>
 

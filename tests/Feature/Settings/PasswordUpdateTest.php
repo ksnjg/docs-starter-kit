@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Models\SystemConfig;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -10,6 +11,14 @@ use Tests\TestCase;
 class PasswordUpdateTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SystemConfig::create(['content_mode' => 'cms', 'setup_completed' => true]);
+        SystemConfig::clearCache();
+    }
 
     public function test_password_update_page_is_displayed()
     {

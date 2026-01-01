@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class DocsSync extends Command
 {
-    protected $signature = 'docs:sync {--force : Force full re-sync}';
+    protected $signature = 'docs:sync {--force : Force full re-sync instead of differential}';
 
     protected $description = 'Sync documentation from Git repository';
 
@@ -19,13 +19,16 @@ class DocsSync extends Command
             return self::FAILURE;
         }
 
-        $this->info('Starting Git sync...');
+        $force = $this->option('force');
+
+        $this->info($force ? 'Starting full Git sync...' : 'Starting differential Git sync...');
 
         try {
-            $sync = $syncService->sync();
+            $sync = $syncService->sync(force: $force);
 
             if ($sync->isSuccess()) {
-                $this->info('✓ Sync completed successfully!');
+                $syncType = $sync->sync_details['sync_type'] ?? 'unknown';
+                $this->info("✓ Sync completed successfully! (Type: {$syncType})");
                 $this->table(
                     ['Attribute', 'Value'],
                     [
@@ -33,6 +36,7 @@ class DocsSync extends Command
                         ['Author', $sync->commit_author],
                         ['Message', $sync->commit_message],
                         ['Files Changed', $sync->files_changed],
+                        ['Sync Type', $syncType],
                     ]
                 );
 

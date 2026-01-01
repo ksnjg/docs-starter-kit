@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FileManagerDialog } from '@/components/FileManager';
+import MarkdownEditor from '@/components/PageEditor/MarkdownEditor.vue';
 import PageEditorToolbar from '@/components/PageEditor/PageEditorToolbar.vue';
 import { useCspNonce } from '@/composables/useCspNonce';
 import { htmlToMarkdown } from '@/composables/useHtmlToMarkdown';
@@ -28,6 +29,7 @@ const emit = defineEmits<{
 const lowlight = createLowlight(common);
 
 const showFileManager = ref(false);
+const isMarkdownMode = ref(false);
 
 const cspNonce = useCspNonce();
 
@@ -73,6 +75,17 @@ const openFileManager = () => {
   showFileManager.value = true;
 };
 
+const toggleMarkdownMode = () => {
+  if (isMarkdownMode.value && editor.value) {
+    editor.value.commands.setContent(markdownToHtml(props.modelValue), { emitUpdate: false });
+  }
+  isMarkdownMode.value = !isMarkdownMode.value;
+};
+
+const handleMarkdownUpdate = (value: string) => {
+  emit('update:modelValue', value);
+};
+
 const handleImageSelect = (files: MediaFile[]) => {
   if (files.length > 0 && files[0].url && editor.value) {
     editor.value.chain().focus().setImage({ src: files[0].url, alt: files[0].name }).run();
@@ -96,8 +109,20 @@ watch(
 
 <template>
   <div class="rounded-lg border bg-background">
-    <PageEditorToolbar v-if="editor" :editor="editor" @open-file-manager="openFileManager" />
-    <EditorContent :editor="editor" />
+    <PageEditorToolbar
+      v-if="editor"
+      :editor="editor"
+      :is-markdown-mode="isMarkdownMode"
+      @open-file-manager="openFileManager"
+      @toggle-markdown-mode="toggleMarkdownMode"
+    />
+    <MarkdownEditor
+      v-if="isMarkdownMode"
+      :model-value="modelValue"
+      :placeholder="placeholder"
+      @update:model-value="handleMarkdownUpdate"
+    />
+    <EditorContent v-else :editor="editor" />
 
     <FileManagerDialog
       v-model:open="showFileManager"

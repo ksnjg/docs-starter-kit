@@ -6,8 +6,17 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Link } from '@inertiajs/vue3';
+import { show } from '@/routes/docs';
+import { Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface NavigationTab {
   id: number;
@@ -22,17 +31,38 @@ interface Props {
   activeId: number | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const activeTab = computed(() => props.tabs.find((tab) => tab.id === props.activeId));
+
+const handleTabChange = (slug: string) => {
+  router.visit(show.url(slug));
+};
 </script>
 
 <template>
-  <nav class="flex items-center">
+  <!-- Mobile: Select dropdown -->
+  <div class="sm:hidden">
+    <Select :model-value="activeTab?.slug" @update:model-value="handleTabChange">
+      <SelectTrigger class="h-8 w-[140px] text-sm">
+        <SelectValue :placeholder="activeTab?.title || 'Select section'" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="tab in tabs" :key="tab.id" :value="tab.slug">
+          {{ tab.title }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <!-- Desktop: Horizontal tabs -->
+  <nav class="hidden items-center sm:flex">
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem v-for="tab in tabs" :key="tab.id">
           <NavigationMenuLink as-child>
             <Link
-              :href="`/docs/${tab.slug}`"
+              :href="show.url(tab.slug)"
               :class="
                 cn(
                   navigationMenuTriggerStyle(),

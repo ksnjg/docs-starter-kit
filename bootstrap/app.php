@@ -29,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        $middleware->validateCsrfTokens(except: [
+            'webhook/*',
+        ]);
+
         $middleware->web(append: [
             AddCspHeaders::class,
             HandleAppearance::class,

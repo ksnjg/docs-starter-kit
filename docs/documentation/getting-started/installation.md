@@ -14,7 +14,7 @@ Follow these steps to install Docs Starter Kit on your local machine or server.
 
 Before you begin, ensure you have the following installed:
 
-- **PHP 8.4** or higher
+- **PHP 8.4+** (check with `php -v`)
 - **Composer** 2.x
 - **Node.js** 18.x or higher
 - **npm** or **pnpm**

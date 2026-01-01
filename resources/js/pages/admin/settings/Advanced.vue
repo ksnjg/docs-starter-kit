@@ -42,6 +42,9 @@ const form = useForm({
   analytics_plausible_domain: String(
     props.settings.advanced_analytics_plausible_domain ?? props.defaults.analytics_plausible_domain,
   ),
+  analytics_clarity_id: String(
+    props.settings.advanced_analytics_clarity_id ?? props.defaults.analytics_clarity_id,
+  ),
   search_enabled: Boolean(props.settings.advanced_search_enabled ?? props.defaults.search_enabled),
   search_provider: String(
     props.settings.advanced_search_provider ?? props.defaults.search_provider,
@@ -72,6 +75,7 @@ const resetToDefaults = () => {
   form.custom_domain = String(props.defaults.custom_domain);
   form.analytics_ga4_id = String(props.defaults.analytics_ga4_id);
   form.analytics_plausible_domain = String(props.defaults.analytics_plausible_domain);
+  form.analytics_clarity_id = String(props.defaults.analytics_clarity_id);
   form.search_enabled = Boolean(props.defaults.search_enabled);
   form.search_provider = String(props.defaults.search_provider);
   form.llm_txt_enabled = Boolean(props.defaults.llm_txt_enabled);
@@ -128,6 +132,17 @@ const resetToDefaults = () => {
                     Privacy-friendly alternative to Google Analytics
                   </p>
                   <InputError :message="form.errors.analytics_plausible_domain" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label for="analytics_clarity_id">Microsoft Clarity ID</Label>
+                  <Input
+                    id="analytics_clarity_id"
+                    v-model="form.analytics_clarity_id"
+                    placeholder="xxxxxxxxxx"
+                  />
+                  <p class="text-xs text-muted-foreground">Heatmaps and session recordings</p>
+                  <InputError :message="form.errors.analytics_clarity_id" />
                 </div>
               </CardContent>
             </Card>

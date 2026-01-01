@@ -122,15 +122,38 @@ AWS_BUCKET=your-bucket
 ## Search Configuration
 
 ```env
+SCOUT_DRIVER=database
+```
+
+For Meilisearch:
+
+```env
 SCOUT_DRIVER=meilisearch
 MEILISEARCH_HOST=http://127.0.0.1:7700
 MEILISEARCH_KEY=your-master-key
 ```
 
-For local search (no external service):
+For Algolia:
 
 ```env
-SCOUT_DRIVER=collection
+SCOUT_DRIVER=algolia
+ALGOLIA_APP_ID=your-app-id
+ALGOLIA_SECRET=your-secret
+```
+
+## LLM Files Configuration
+
+```env
+LLM_FILES_ENABLED=true
+LLM_FULL_MAX_SIZE=10000000
+```
+
+## Cloudflare Turnstile (Optional CAPTCHA)
+
+```env
+TURNSTILE_CF_SITE=your-site-key
+TURNSTILE_CF_SECRET=your-secret-key
+VITE_TURNSTILE_SITE_KEY="${TURNSTILE_CF_SITE}"
 ```
 
 ## Security Settings

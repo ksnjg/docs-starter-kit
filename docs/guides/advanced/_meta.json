@@ -15,6 +15,18 @@
     "deployment": {
       "title": "Deployment",
       "order": 3
+    },
+    "activity-logs": {
+      "title": "Activity Logs",
+      "order": 4
+    },
+    "user-management": {
+      "title": "User Management",
+      "order": 5
+    },
+    "security": {
+      "title": "Security",
+      "order": 6
     }
   }
 }

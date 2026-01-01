@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SystemConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -9,10 +10,18 @@ class ExampleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SystemConfig::create(['content_mode' => 'cms', 'setup_completed' => true]);
+        SystemConfig::clearCache();
+    }
+
     public function test_returns_a_successful_response()
     {
         $response = $this->get(route('home'));
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('docs.index'));
     }
 }

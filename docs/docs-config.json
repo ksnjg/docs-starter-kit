@@ -30,7 +30,12 @@
     "image": "/assets/images/og-image.png"
   },
   "analytics": {
-    "google_analytics": "",
-    "plausible": false
+    "google_analytics_4": "",
+    "plausible_domain": "",
+    "microsoft_clarity": ""
+  },
+  "security": {
+    "two_factor_authentication": true,
+    "cloudflare_turnstile": false
   }
 }

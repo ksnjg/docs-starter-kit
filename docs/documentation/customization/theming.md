@@ -191,3 +191,11 @@ To reset theme settings to defaults:
 3. Confirm the action
 
 This will restore all color and dark mode settings to their original values.
+
+## Related Settings
+
+Theme settings work together with other customization options:
+
+- [Typography](/docs/documentation/customization/typography) - Fonts and text styling
+- [Layout](/docs/documentation/customization/layout) - Widths and navigation
+- [Branding](/docs/documentation/customization/theming) - Logos and site identity

@@ -66,6 +66,7 @@ class PolicyCSP extends Basic
                 '*.google.com',
                 'ssl.gstatic.com',
                 'www.gstatic.com',
+                'raw.githubusercontent.com',
             ])
             ->add(Directive::FRAME, [
                 'td.doubleclick.net',
@@ -78,5 +79,10 @@ class PolicyCSP extends Basic
                 "'sha256-p08VBe6m5i8+qtXWjnH/AN3klt1l4uoOLsjNn8BjdQo='",
             ])
             ->add(Directive::FONT, ['https://fonts.gstatic.com']);
+
+        // Plausible Analytics
+        $policy
+            ->add(Directive::SCRIPT, 'plausible.io')
+            ->add(Directive::CONNECT, 'plausible.io');
     }
 }

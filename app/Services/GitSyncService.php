@@ -17,7 +17,7 @@ class GitSyncService
         private ContentImporter $importer
     ) {}
 
-    public function sync(): GitSync
+    public function sync(bool $force = false): GitSync
     {
         $config = SystemConfig::instance();
 
@@ -43,6 +43,11 @@ class GitSyncService
             return GitSync::where('commit_hash', $latestCommit['sha'])->first();
         }
 
+        // Get last successful sync for differential sync
+        $lastSuccessfulSync = GitSync::where('sync_status', 'success')
+            ->latest()
+            ->first();
+
         // Create sync record
         $sync = GitSync::create([
             'commit_hash' => $latestCommit['sha'],
@@ -53,41 +58,36 @@ class GitSyncService
         ]);
 
         try {
-            DB::transaction(function () use ($client, $latestCommit, $sync) {
-                // Get all markdown files from docs directory
-                $tree = $client->getDirectoryTree('docs');
-                $markdownFiles = collect($tree)
-                    ->filter(fn ($item) => str_ends_with($item['path'], '.md'))
-                    ->pluck('path')
-                    ->toArray();
-
+            DB::transaction(function () use ($client, $latestCommit, $sync, $lastSuccessfulSync, $force) {
                 $processedPaths = [];
+                $deletedPaths = [];
+                $isFullSync = $force || ! $lastSuccessfulSync;
 
-                // Process each markdown file
-                foreach ($markdownFiles as $path) {
-                    try {
-                        $content = $client->getFileContent($path);
-
-                        if ($content) {
-                            $parsed = $this->parser->parse($content, $path);
-                            $this->importer->import($parsed, $latestCommit);
-                            $processedPaths[] = $path;
-                        }
-                    } catch (\Exception $e) {
-                        Log::error("Failed to process file {$path}: ".$e->getMessage());
-                    }
+                if ($isFullSync) {
+                    // Full sync: process all files
+                    $result = $this->performFullSync($client, $latestCommit);
+                    $processedPaths = $result['processed'];
+                    $deletedPaths = $result['deleted'];
+                } else {
+                    // Differential sync: only process changed files
+                    $result = $this->performDifferentialSync(
+                        $client,
+                        $lastSuccessfulSync->commit_hash,
+                        $latestCommit
+                    );
+                    $processedPaths = $result['processed'];
+                    $deletedPaths = $result['deleted'];
                 }
-
-                // Delete pages that no longer exist in Git
-                $deleted = $this->importer->deleteRemovedPages($processedPaths);
 
                 // Update sync record
                 $sync->update([
                     'sync_status' => 'success',
-                    'files_changed' => count($processedPaths),
+                    'files_changed' => count($processedPaths) + count($deletedPaths),
                     'sync_details' => [
+                        'sync_type' => $isFullSync ? 'full' : 'differential',
                         'processed_files' => count($processedPaths),
-                        'deleted' => $deleted,
+                        'deleted_files' => count($deletedPaths),
+                        'from_commit' => $lastSuccessfulSync?->commit_hash,
                     ],
                 ]);
 
@@ -112,6 +112,115 @@ class GitSyncService
 
             throw $e;
         }
+    }
+
+    private function performFullSync(GitHubApiClient $client, array $latestCommit): array
+    {
+        // Get all markdown files from docs directory
+        $tree = $client->getDirectoryTree('docs');
+        $markdownFiles = collect($tree)
+            ->filter(fn ($item) => str_ends_with($item['path'], '.md'))
+            ->pluck('path')
+            ->toArray();
+
+        $processedPaths = [];
+
+        // Process each markdown file
+        foreach ($markdownFiles as $path) {
+            try {
+                $content = $client->getFileContent($path);
+
+                if ($content) {
+                    $parsed = $this->parser->parse($content, $path);
+                    $this->importer->import($parsed, $latestCommit);
+                    $processedPaths[] = $path;
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to process file {$path}: ".$e->getMessage());
+            }
+        }
+
+        // Delete pages that no longer exist in Git
+        $deleted = $this->importer->deleteRemovedPages($processedPaths);
+
+        return [
+            'processed' => $processedPaths,
+            'deleted' => array_fill(0, $deleted['documents'] ?? 0, 'deleted'),
+        ];
+    }
+
+    private function performDifferentialSync(
+        GitHubApiClient $client,
+        string $fromCommit,
+        array $latestCommit
+    ): array {
+        // Get changed files between commits
+        $changedFiles = $client->getChangedFiles($fromCommit, $latestCommit['sha']);
+
+        $processedPaths = [];
+        $deletedPaths = [];
+
+        foreach ($changedFiles as $file) {
+            $path = $file['filename'];
+
+            // Only process markdown files in docs directory
+            if (! str_ends_with($path, '.md') || ! str_starts_with($path, 'docs/')) {
+                continue;
+            }
+
+            if ($file['status'] === 'removed') {
+                // File was deleted - remove from database
+                $page = Page::where('git_path', $path)->where('source', 'git')->first();
+                if ($page) {
+                    $page->delete();
+                    $deletedPaths[] = $path;
+                    Log::info("Deleted page for removed file: {$path}");
+                }
+            } else {
+                // File was added or modified - fetch and update
+                try {
+                    $content = $client->getFileContent($path);
+
+                    if ($content) {
+                        $parsed = $this->parser->parse($content, $path);
+                        $this->importer->import($parsed, $latestCommit);
+                        $processedPaths[] = $path;
+                        Log::info("Processed {$file['status']} file: {$path}");
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Failed to process file {$path}: ".$e->getMessage());
+                }
+            }
+        }
+
+        // Clean up orphaned groups/navigation pages
+        if (count($deletedPaths) > 0) {
+            $this->cleanupOrphanedPages();
+        }
+
+        return [
+            'processed' => $processedPaths,
+            'deleted' => $deletedPaths,
+        ];
+    }
+
+    private function cleanupOrphanedPages(): void
+    {
+        // Remove groups with no children
+        do {
+            $deletedGroups = Page::query()
+                ->where('source', 'git')
+                ->where('type', 'group')
+                ->whereDoesntHave('children')
+                ->delete();
+        } while ($deletedGroups > 0);
+
+        // Remove navigation tabs with no children
+        Page::query()
+            ->where('source', 'git')
+            ->where('type', 'navigation')
+            ->whereDoesntHave('children')
+            ->delete();
     }
 
     public function rollback(GitSync $sync): void

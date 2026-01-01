@@ -147,8 +147,31 @@ When editing, your changes are visible in real-time in the editor preview panel.
 
 Toggle page visibility without deleting by changing the status between Published and Draft.
 
+## SEO Features
+
+### Automatic Sitemap
+
+A sitemap is automatically generated at `/sitemap.xml` containing:
+
+- Home page
+- Documentation root
+- All published document pages
+
+The sitemap updates automatically when pages are published or updated.
+
+### LLM Files
+
+Generate AI-friendly documentation files:
+
+- `/llms.txt` - Navigation and page list
+- `/llms-full.txt` - Complete documentation content
+
+Enable via **Settings > Advanced > LLM Files**.
+
 ## Next Steps
 
 - [Configure environment variables](/docs/documentation/configuration/environment-variables)
 - [Set up Git synchronization](/docs/guides/git-mode/setup)
 - [Customize your theme](/docs/documentation/customization/theming)
+- [Configure analytics](/docs/documentation/configuration/analytics)
+- [Enable two-factor authentication](/docs/guides/advanced/security)

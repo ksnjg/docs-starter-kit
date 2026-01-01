@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Models\SystemConfig;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -11,6 +12,14 @@ use Tests\TestCase;
 class TwoFactorAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SystemConfig::create(['content_mode' => 'cms', 'setup_completed' => true]);
+        SystemConfig::clearCache();
+    }
 
     public function test_two_factor_settings_page_can_be_rendered()
     {

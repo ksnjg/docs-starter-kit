@@ -6,13 +6,14 @@
     "type": "module",
     "scripts": {
         "build": "php artisan optimize:clear && php artisan view:clear && npm run format && vite build && vite build --ssr",
-        "dev": "php artisan optimize:clear && npx concurrently -c \"#c4b5fd,#fb7185\" \"php artisan schedule:work\" \"vite\" --names=schedule,vite",
+        "dev": "php artisan optimize:clear && npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" \"php artisan inertia:start-ssr\" \"php artisan schedule:work\" \"vite\" --names=ssr,schedule,vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "migrate": "php artisan migrate:fresh --seed && php artisan optimize:clear",
-        "update": "npm update && composer update && npm run build"
+        "update": "npm update && composer update && npm run build",
+        "test": "php artisan test --log-junit=test-results.xml 2>&1 | tee test-output.txt"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",

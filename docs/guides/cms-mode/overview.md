@@ -178,3 +178,5 @@ Each save creates a version:
 - [Learn to create pages](/docs/guides/cms-mode/creating-pages)
 - [Master the editor](/docs/guides/cms-mode/editor-guide)
 - [Manage media files](/docs/guides/cms-mode/media-management)
+- [Configure search](/docs/documentation/configuration/search)
+- [Set up analytics](/docs/documentation/configuration/analytics)

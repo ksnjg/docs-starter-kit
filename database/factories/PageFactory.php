@@ -21,6 +21,7 @@ class PageFactory extends Factory
         return [
             'title' => $title,
             'slug' => Str::slug($title),
+            'type' => 'document',
             'content' => fake()->paragraphs(5, true),
             'status' => 'published',
             'order' => fake()->numberBetween(0, 100),
@@ -79,6 +80,27 @@ class PageFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'parent_id' => $parent->id,
+        ]);
+    }
+
+    public function navigation(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'navigation',
+        ]);
+    }
+
+    public function group(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'group',
+        ]);
+    }
+
+    public function document(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'document',
         ]);
     }
 }

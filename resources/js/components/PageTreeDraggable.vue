@@ -204,6 +204,29 @@ watch(
 
           <div class="flex shrink-0 items-center gap-1">
             <Button
+              v-if="item.status !== 'published'"
+              variant="ghost"
+              size="icon"
+              class="h-8 w-8 text-green-600 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-950"
+              :disabled="processingId === item.id"
+              title="Publish"
+              @click="emit('publish', item)"
+            >
+              <Eye class="h-4 w-4" />
+            </Button>
+            <Button
+              v-else
+              variant="ghost"
+              size="icon"
+              class="h-8 w-8 text-amber-600 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950"
+              :disabled="processingId === item.id"
+              title="Unpublish"
+              @click="emit('unpublish', item)"
+            >
+              <EyeOff class="h-4 w-4" />
+            </Button>
+
+            <Button
               v-if="item.type !== 'document'"
               variant="ghost"
               size="icon"

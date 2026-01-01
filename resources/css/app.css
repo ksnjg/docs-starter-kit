@@ -1147,3 +1147,178 @@ html[dir='rtl'],
   opacity: 0;
   transform: scale(0.8) translate(-50%, -50%);
 }
+
+/* Highlight.js Theme - GitHub Dark/Light */
+.hljs {
+  padding: 1rem !important;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+/* Light mode - default */
+html:not(.dark) .hljs {
+  background: #f6f8fa !important;
+  color: #24292f;
+}
+
+/* Dark mode */
+html.dark .hljs {
+  background: #161b22 !important;
+  color: #e6edf3;
+}
+
+html.dark .hljs-comment,
+html.dark .hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+html:not(.dark) .hljs-comment,
+html:not(.dark) .hljs-quote {
+  color: #6e7781;
+  font-style: italic;
+}
+
+html.dark .hljs-keyword,
+html.dark .hljs-selector-tag,
+html.dark .hljs-literal,
+html.dark .hljs-section,
+html.dark .hljs-link {
+  color: #ff7b72;
+}
+
+html:not(.dark) .hljs-keyword,
+html:not(.dark) .hljs-selector-tag,
+html:not(.dark) .hljs-literal,
+html:not(.dark) .hljs-section,
+html:not(.dark) .hljs-link {
+  color: #cf222e;
+}
+
+html.dark .hljs-string,
+html.dark .hljs-title,
+html.dark .hljs-name,
+html.dark .hljs-type,
+html.dark .hljs-attribute,
+html.dark .hljs-symbol,
+html.dark .hljs-bullet,
+html.dark .hljs-addition,
+html.dark .hljs-variable,
+html.dark .hljs-template-tag,
+html.dark .hljs-template-variable {
+  color: #a5d6ff;
+}
+
+html:not(.dark) .hljs-string,
+html:not(.dark) .hljs-title,
+html:not(.dark) .hljs-name,
+html:not(.dark) .hljs-type,
+html:not(.dark) .hljs-attribute,
+html:not(.dark) .hljs-symbol,
+html:not(.dark) .hljs-bullet,
+html:not(.dark) .hljs-addition,
+html:not(.dark) .hljs-variable,
+html:not(.dark) .hljs-template-tag,
+html:not(.dark) .hljs-template-variable {
+  color: #0a3069;
+}
+
+html.dark .hljs-function,
+html.dark .hljs-built_in {
+  color: #d2a8ff;
+}
+
+html:not(.dark) .hljs-function,
+html:not(.dark) .hljs-built_in {
+  color: #8250df;
+}
+
+html.dark .hljs-number,
+html.dark .hljs-class {
+  color: #79c0ff;
+}
+
+html:not(.dark) .hljs-number,
+html:not(.dark) .hljs-class {
+  color: #0550ae;
+}
+
+html.dark .hljs-property {
+  color: #7ee787;
+}
+
+html:not(.dark) .hljs-property {
+  color: #116329;
+}
+
+html.dark .hljs-regexp {
+  color: #7ee787;
+}
+
+html:not(.dark) .hljs-regexp {
+  color: #116329;
+}
+
+html.dark .hljs-deletion {
+  color: #ffa198;
+  background-color: rgba(255, 129, 130, 0.15);
+}
+
+html:not(.dark) .hljs-deletion {
+  color: #82071e;
+  background-color: rgba(255, 129, 130, 0.15);
+}
+
+html.dark .hljs-meta {
+  color: #ffa657;
+}
+
+html:not(.dark) .hljs-meta {
+  color: #953800;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Code block styling */
+.prose pre {
+  padding: 0 !important;
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+}
+
+html.dark .prose pre {
+  background: #161b22 !important;
+  border: 1px solid rgba(139, 148, 158, 0.2);
+}
+
+html:not(.dark) .prose pre {
+  background: #f6f8fa !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.prose pre code {
+  background: transparent !important;
+  padding: 1rem !important;
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+/* Language label for code blocks */
+.prose pre[class*='language-']::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #8b949e;
+  background: rgba(139, 148, 158, 0.1);
+  border-bottom-left-radius: 0.25rem;
+}

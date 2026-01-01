@@ -213,9 +213,6 @@ Background Git synchronization:
 ```php
 use App\Jobs\SyncGitRepositoryJob;
 
-// Dispatch to queue
-SyncGitRepositoryJob::dispatch();
-
 // Dispatch to high-priority queue
 SyncGitRepositoryJob::dispatch()->onQueue('high-priority');
 
@@ -225,7 +222,7 @@ SyncGitRepositoryJob::dispatchSync();
 
 ### GenerateLLMFilesJob
 
-Generate LLM documentation files:
+Generate LLM documentation files (`llms.txt` and `llms-full.txt`):
 
 ```php
 use App\Jobs\GenerateLLMFilesJob;
@@ -235,6 +232,50 @@ GenerateLLMFilesJob::dispatch();
 
 // Run synchronously
 GenerateLLMFilesJob::dispatchSync();
+```
+
+**Generated files location**: `public/llms.txt` and `public/llms-full.txt`
+
+## Services
+
+### ActivityLogService
+
+Logs and queries user activity:
+
+```php
+use App\Services\ActivityLogService;
+
+$service = app(ActivityLogService::class);
+
+// Get filtered logs
+$logs = $service->getLogs([
+    'user_id' => 1,
+    'action' => 'create',
+    'start_date' => '2024-01-01',
+    'end_date' => '2024-12-31',
+]);
+
+// Clean old logs (older than 90 days)
+$deleted = $service->cleanOldLogs(90);
+```
+
+### IpDetectionService
+
+Handles IP detection with proxy/Cloudflare support:
+
+```php
+use App\Services\IpDetectionService;
+
+$service = app(IpDetectionService::class);
+
+// Get client IP (handles Cloudflare, proxies)
+$ip = $service->getClientIp($request);
+
+// Get IP geolocation info
+$info = $service->getIpInfo($ip);
+
+// Check if server IP (internal request)
+$isServer = $service->isServerIp($request, $ip);
 ```
 
 ## Events
@@ -262,8 +303,63 @@ use App\Events\GitSyncFailed;
 
 // Listen in EventServiceProvider
 GitSyncFailed::class => [
-    NotifyAdminOfSyncFailure::class,
+    StoreSyncFailed::class,
 ],
+```
+
+## Models
+
+### Setting
+
+Manages site settings (theme, typography, layout, branding):
+
+```php
+use App\Models\Setting;
+
+// Get a setting
+$value = Setting::get('theme_primary_color', '#3B82F6');
+
+// Set a setting
+Setting::set('theme_primary_color', '#FF0000', 'theme');
+
+// Get settings by group
+$themeSettings = Setting::getByGroup('theme');
+
+// Get all cached settings
+$allSettings = Setting::getCached();
+```
+
+### FeedbackForm
+
+Feedback form configurations:
+
+```php
+use App\Models\FeedbackForm;
+
+// Query scopes
+FeedbackForm::active()->get();
+FeedbackForm::forPositive()->get();
+FeedbackForm::forNegative()->get();
+
+// Check trigger type
+$form->isForPositive();
+$form->isForNegative();
+```
+
+### ActivityLog
+
+User activity records:
+
+```php
+use App\Models\ActivityLog;
+
+// Query scopes
+ActivityLog::forUser($userId)->get();
+ActivityLog::forAction('login')->get();
+ActivityLog::forRoute('admin.pages.store')->get();
+ActivityLog::inDateRange($start, $end)->get();
+ActivityLog::successful()->get();
+ActivityLog::withErrors()->get();
 ```
 
 ## Extending

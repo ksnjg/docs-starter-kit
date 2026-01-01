@@ -75,10 +75,21 @@ export default defineConfig(({ isSsrBuild }) => ({
                             if (id.includes('lucide-vue-next')) {
                                 return 'icons';
                             }
-
+                            if (id.includes('highlight.js/lib/languages')) {
+                                // Extract language name from path
+                                const match = id.match(/languages\/([^/]+)/);
+                                if (match) {
+                                    return `syntax-highlight-${match[1]}`;
+                                }
+                                return 'syntax-highlight-langs';
+                            }
                             // Syntax highlighting
-                            if (id.includes('highlight.js') || id.includes('lowlight')) {
-                                return 'syntax';
+                            if (id.includes('highlight.js')) {
+                                return 'syntax-highlight';
+                            }
+                            // Lowlight
+                            if (id.includes('lowlight')) {
+                                return 'syntax-lowlight';
                             }
 
                             // Drag and drop

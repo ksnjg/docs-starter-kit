@@ -2,31 +2,19 @@
 import DocsHeader from '@/components/docs/DocsHeader.vue';
 import type { SidebarItem } from '@/components/docs/DocsNavigation.vue';
 import DocsSidebar from '@/components/docs/DocsSidebar.vue';
+import SearchDialog from '@/components/SearchDialog.vue';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import type { SiteSettings } from '@/types';
 import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, provide, ref } from 'vue';
 
 const page = usePage();
 const siteSettings = computed(() => page.props.siteSettings as SiteSettings | undefined);
 const isOpen = page.props.sidebarOpen;
 
-useKeyboardShortcuts([
-  {
-    key: 'k',
-    ctrl: true,
-    handler: () => {
-      const searchInput = document.querySelector<HTMLInputElement>(
-        '[placeholder="Search docs..."]',
-      );
-      if (searchInput) {
-        searchInput.focus();
-        searchInput.select();
-      }
-    },
-  },
-]);
+const searchOpen = ref(false);
+
+provide('searchOpen', searchOpen);
 
 interface NavigationTab {
   id: number;
@@ -75,6 +63,8 @@ const cssVariables = computed(() => ({
       </SidebarInset>
     </SidebarProvider>
 
+    <SearchDialog v-model:open="searchOpen" />
+
     <Teleport to="head">
       <style v-if="siteSettings?.theme?.customCss">
         {{ siteSettings.theme.customCss }}
@@ -110,5 +100,11 @@ const cssVariables = computed(() => ({
 
 .docs-content-area {
   max-width: var(--docs-content-width);
+}
+
+@media (max-width: 640px) {
+  .docs-content-area {
+    max-width: 100%;
+  }
 }
 </style>

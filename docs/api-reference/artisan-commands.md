@@ -92,11 +92,15 @@ Testing repository connection...
 
 ### docs:rollback
 
-Rollback documentation to a previous sync state.
+Roll back to a previous sync state:
 
 ```bash
 php artisan docs:rollback {sync_id}
 ```
+
+- `sync_id`: The ID of the successful sync to rollback to
+- Prompts for confirmation before proceeding
+- Only successful syncs can be rolled back to
 
 **Arguments:**
 - `sync_id`: ID of the sync to rollback to
@@ -318,4 +322,26 @@ public function handle(): int
     
     return self::SUCCESS;
 }
+```
+
+## IP Anonymization Command
+
+Anonymize old IP addresses for GDPR compliance:
+
+```bash
+php artisan app:anonymize-old-ip-addresses
+```
+
+This command anonymizes IP addresses in activity logs older than the configured retention period.
+
+## Search Commands
+
+Manage the search index:
+
+```bash
+# Import pages to search index
+php artisan scout:import "App\Models\Page"
+
+# Flush the search index
+php artisan scout:flush "App\Models\Page"
 ```

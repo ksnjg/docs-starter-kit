@@ -2,6 +2,9 @@
 import DashboardStats from '@/components/dashboard/DashboardStats.vue';
 import FeedbackChart from '@/components/dashboard/FeedbackChart.vue';
 import RecentPages from '@/components/dashboard/RecentPages.vue';
+import GitSyncStatusIndicator, {
+  type GitSyncStatus,
+} from '@/components/GitSyncStatusIndicator.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -24,6 +27,7 @@ interface Stats {
 defineProps<{
   stats: Stats;
   recentPages: Page[];
+  gitSyncStatus: GitSyncStatus | null;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -47,7 +51,10 @@ const quickActions = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="px-4 py-6">
       <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <div class="flex items-center gap-4">
+          <h1 class="text-2xl font-bold">Dashboard</h1>
+          <GitSyncStatusIndicator :git-sync-status="gitSyncStatus" />
+        </div>
         <Button as-child>
           <Link :href="pagesCreate()">
             <Plus class="mr-2 h-4 w-4" />

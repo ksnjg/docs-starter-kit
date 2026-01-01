@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DynamicFormField from '@/components/docs/DynamicFormField.vue';
 import { Button } from '@/components/ui/button';
+import { store as feedbackStore } from '@/routes/feedback';
 import type { FeedbackForm, FeedbackFormField } from '@/types/feedback';
 import { useForm } from '@inertiajs/vue3';
 import { ThumbsDown, ThumbsUp } from 'lucide-vue-next';
@@ -65,7 +66,7 @@ const submitFeedback = () => {
   const hasData = Object.values(formData).some((v) => (Array.isArray(v) ? v.length > 0 : v !== ''));
   form.form_data = hasData ? { ...formData } : null;
 
-  form.post('/feedback', {
+  form.post(feedbackStore.url(), {
     preserveScroll: true,
     preserveState: true,
     onSuccess: () => {

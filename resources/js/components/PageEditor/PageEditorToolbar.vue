@@ -5,6 +5,7 @@ import type { Editor } from '@tiptap/vue-3';
 import {
   Bold,
   Code,
+  FileCode,
   Heading1,
   Heading2,
   Heading3,
@@ -22,12 +23,14 @@ import {
 
 interface Props {
   editor: Editor;
+  isMarkdownMode?: boolean;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   openFileManager: [];
+  toggleMarkdownMode: [];
 }>();
 
 const setLink = () => {
@@ -189,6 +192,19 @@ const setLink = () => {
       @click="editor.chain().focus().redo().run()"
     >
       <Redo class="h-4 w-4" />
+    </Button>
+
+    <Separator orientation="vertical" class="mx-1 h-6" />
+
+    <Button
+      variant="ghost"
+      size="icon"
+      type="button"
+      :class="{ 'bg-muted': isMarkdownMode }"
+      title="Toggle Markdown Mode"
+      @click="emit('toggleMarkdownMode')"
+    >
+      <FileCode class="h-4 w-4" />
     </Button>
   </div>
 </template>

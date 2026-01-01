@@ -168,13 +168,20 @@ class DocsController extends Controller
     private function extractTableOfContents(string $content): array
     {
         $toc = [];
+        $idCounts = [];
 
         preg_match_all('/^(#{1,3})\s+(.+)$/m', $content, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
             $level = strlen($match[1]);
             $text = trim($match[2]);
-            $id = $this->slugify($text);
+            $baseId = $this->slugify($text);
+
+            // Track occurrences and append suffix for duplicates
+            $count = $idCounts[$baseId] ?? 0;
+            $idCounts[$baseId] = $count + 1;
+
+            $id = $count === 0 ? $baseId : "{$baseId}-{$count}";
 
             $toc[] = [
                 'id' => $id,

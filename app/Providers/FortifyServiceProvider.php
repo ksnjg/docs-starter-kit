@@ -49,7 +49,7 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'status' => $request->session()->get('status'),
+            'status' => $request->hasSession() ? $request->session()->get('status') : null,
         ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
@@ -63,7 +63,9 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRateLimiting(): void
     {
         RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
+            $loginId = $request->hasSession() ? $request->session()->get('login.id') : null;
+
+            return Limit::perMinute(5)->by($loginId);
         });
 
         RateLimiter::for('login', function (Request $request) {
@@ -96,7 +98,13 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Event::listen(Authenticated::class, function (Authenticated $event) {
             if ($event->guard === 'web' && $event->user instanceof User) {
-                $currentSessionId = request()->session()->getId();
+                $request = request();
+
+                if (! $request->hasSession()) {
+                    return;
+                }
+
+                $currentSessionId = $request->session()->getId();
 
                 // Mark all other sessions as terminated before deleting
                 DB::table(config('session.table', 'sessions'))

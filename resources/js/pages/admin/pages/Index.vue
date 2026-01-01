@@ -25,7 +25,7 @@ import type { BreadcrumbItem, Page, StatusOption } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import { FileText, Plus } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface TreeItem {
   id: number;
@@ -148,6 +148,23 @@ const handleUnpublish = (item: TreeItem) => {
     },
   );
 };
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+
+  if (isCtrlOrMeta && e.key.toLowerCase() === 'n' && !e.shiftKey) {
+    e.preventDefault();
+    router.visit(create().url);
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <template>
@@ -161,6 +178,11 @@ const handleUnpublish = (item: TreeItem) => {
           <Link :href="create()">
             <Plus class="mr-2 h-4 w-4" />
             Create Page
+            <kbd
+              class="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block"
+            >
+              Ctrl+N
+            </kbd>
           </Link>
         </Button>
       </div>

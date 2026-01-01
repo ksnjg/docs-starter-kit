@@ -106,7 +106,7 @@ php artisan migrate --force
 | CPU | 1 core | 2+ cores |
 | RAM | 1 GB | 2+ GB |
 | Storage | 10 GB | 20+ GB |
-| PHP | 8.4 | 8.4+ |
+| PHP | 8.4+ | 8.4+ |
 
 ### Required PHP Extensions
 
@@ -158,7 +158,7 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }

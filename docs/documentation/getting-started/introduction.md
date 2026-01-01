@@ -46,10 +46,12 @@ Docs Starter Kit uses Inertia.js to combine the best of both worlds:
 - Vite as build tool
 
 ### Backend
-- Laravel 12 (latest)
+- Laravel 12
 - PHP 8.4+
 - MySQL/PostgreSQL/SQLite
 - Redis for caching (optional)
+- Laravel Scout for search
+- Laravel Fortify for authentication
 
 ## Content Management Modes
 

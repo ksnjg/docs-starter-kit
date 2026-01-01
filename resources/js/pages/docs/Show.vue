@@ -113,14 +113,14 @@ const tocPosition = computed(() => siteSettings.value?.layout?.tocPosition ?? 'r
     :sidebar-items="sidebarItems"
     :current-path="currentPath"
   >
-    <div class="flex">
+    <div class="flex flex-col lg:flex-row">
       <DocsTableOfContents
         v-if="showToc && tocPosition === 'left' && currentPage?.type === 'document'"
         :items="tableOfContents"
         class="order-first"
       />
 
-      <div class="docs-content-area flex-1 px-8 py-6">
+      <div class="docs-content-area flex-1 px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
         <DocsBreadcrumb v-if="showBreadcrumbs" :items="breadcrumbs" />
 
         <div v-if="currentPage && currentPage.type === 'document'">

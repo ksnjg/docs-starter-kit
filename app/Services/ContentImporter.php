@@ -6,10 +6,23 @@ use App\Models\Page;
 
 class ContentImporter
 {
+    private AssetUrlTransformer $assetTransformer;
+
+    public function __construct()
+    {
+        $this->assetTransformer = new AssetUrlTransformer;
+    }
+
     public function import(array $parsedContent, array $commitInfo): Page
     {
         $hierarchy = $parsedContent['hierarchy'];
         $parentPage = $this->findOrCreateParents($hierarchy);
+
+        // Transform asset URLs to GitHub raw URLs
+        $content = $this->assetTransformer->transformContent(
+            $parsedContent['content'],
+            $parsedContent['git_path']
+        );
 
         $page = Page::updateOrCreate(
             [
@@ -20,7 +33,7 @@ class ContentImporter
                 'title' => $parsedContent['title'],
                 'slug' => $parsedContent['slug'],
                 'type' => 'document',
-                'content' => $parsedContent['content'],
+                'content' => $content,
                 'seo_title' => $parsedContent['seo_title'],
                 'seo_description' => $parsedContent['seo_description'],
                 'status' => $parsedContent['status'],
