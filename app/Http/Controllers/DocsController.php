@@ -68,7 +68,7 @@ class DocsController extends Controller
         if ($currentPage) {
             $pageData = $currentPage->only([
                 'id', 'title', 'slug', 'type',
-                'seo_title', 'seo_description', 'updated_at',
+                'seo_title', 'seo_description', 'updated_at', 'created_at',
                 'source', 'updated_at_git', 'git_last_author',
             ]);
             $pageData['content_raw'] = $currentPage->content;
@@ -77,6 +77,7 @@ class DocsController extends Controller
                 : null;
 
             $pageData['edit_on_github_url'] = $currentPage->getEditOnGitHubUrlAttribute();
+            $pageData['canonical_url'] = url('/docs/'.$currentPage->getFullPath());
         }
 
         $feedbackForms = FeedbackForm::active()->get(['id', 'name', 'trigger_type', 'fields']);

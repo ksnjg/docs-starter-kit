@@ -4,6 +4,7 @@ import { renderToString } from '@vue/server-renderer';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createSSRApp, h } from 'vue';
+import { vCspStyle } from './directives/vCspStyle';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -18,7 +19,10 @@ createServer(
           `./pages/${name}.vue`,
           import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
-      setup: ({ App, props, plugin }) => createSSRApp({ render: () => h(App, props) }).use(plugin),
+      setup: ({ App, props, plugin }) =>
+        createSSRApp({ render: () => h(App, props) })
+          .use(plugin)
+          .directive('csp-style', vCspStyle),
     }),
   { cluster: true },
 );

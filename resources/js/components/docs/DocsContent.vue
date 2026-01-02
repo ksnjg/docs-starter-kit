@@ -3,7 +3,7 @@ import GithubIcon from '@/components/icons/GithubIcon.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { SiteSettings } from '@/types';
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import hljs from 'highlight.js';
 import { CheckIcon, CopyIcon, DownloadIcon } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -121,6 +121,37 @@ const addCopyButtons = () => {
   });
 };
 
+const handleInternalLinks = () => {
+  if (!contentRef.value) {
+    return;
+  }
+
+  const links = contentRef.value.querySelectorAll('a[href]');
+
+  links.forEach((link) => {
+    const href = link.getAttribute('href');
+    if (!href) {
+      return;
+    }
+
+    // Check if it's an internal docs link (starts with /docs/ or is relative within docs)
+    const isInternalDocsLink = href.startsWith('/docs/');
+
+    if (isInternalDocsLink) {
+      // Remove any existing listener by cloning (prevents duplicates)
+      if (link.hasAttribute('data-inertia-handled')) {
+        return;
+      }
+      link.setAttribute('data-inertia-handled', 'true');
+
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        router.visit(href);
+      });
+    }
+  });
+};
+
 const addLineNumbers = () => {
   if (!contentRef.value) {
     return;
@@ -213,6 +244,7 @@ onMounted(() => {
     applySyntaxHighlighting();
     addCopyButtons();
     addLineNumbers();
+    handleInternalLinks();
   });
 });
 
@@ -224,6 +256,7 @@ watch(
       applySyntaxHighlighting();
       addCopyButtons();
       addLineNumbers();
+      handleInternalLinks();
     });
   },
 );
@@ -233,7 +266,12 @@ watch(
   <article class="prose max-w-none prose-slate dark:prose-invert">
     <header v-if="title" class="mb-6 space-y-3 sm:mb-8 sm:space-y-2">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{{ title }}</h1>
+        <p v-if="formattedDate" class="m-0 text-sm text-muted-foreground">
+          Last updated: {{ formattedDate }}
+        </p>
+        <p v-if="gitLastAuthor" class="m-0 text-sm text-muted-foreground">
+          Last commit author: {{ gitLastAuthor }}
+        </p>
         <div class="flex flex-wrap items-center gap-2">
           <Button
             v-if="hasEditLink"
@@ -271,13 +309,7 @@ watch(
           </Button>
         </div>
       </div>
-      <p v-if="formattedDate" class="text-sm text-muted-foreground">
-        Last updated: {{ formattedDate }}
-      </p>
-      <p v-if="gitLastAuthor" class="text-sm text-muted-foreground">
-        Last commit author: {{ gitLastAuthor }}
-      </p>
-      <Separator class="mt-4" />
+      <Separator class="mt-2" />
     </header>
 
     <div ref="contentRef" v-html="content" class="prose max-w-none prose-slate dark:prose-invert" />

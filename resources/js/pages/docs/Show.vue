@@ -9,7 +9,7 @@ import DocsLayout from '@/layouts/DocsLayout.vue';
 import type { SiteSettings } from '@/types';
 import type { FeedbackForm } from '@/types/feedback';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 
 const cspNonce = useCspNonce();
 
@@ -33,11 +33,13 @@ interface CurrentPage {
   type: 'navigation' | 'group' | 'document';
   seo_title: string | null;
   seo_description: string | null;
+  created_at: string;
   updated_at: string;
   source?: 'git' | 'cms';
   updated_at_git?: string | null;
   git_last_author?: string | null;
   edit_on_github_url?: string | null;
+  canonical_url?: string | null;
 }
 
 interface TocItem {
@@ -105,15 +107,96 @@ const showToc = computed(() => {
 });
 const tocPosition = computed(() => siteSettings.value?.layout?.tocPosition ?? 'right');
 
-//inject style with csp on head
-onMounted(() => {
-  if (!siteSettings.value?.theme?.customCss) {
-    return;
+const canonicalUrl = computed(() => props.currentPage?.canonical_url ?? '');
+
+const siteName = computed(() => siteSettings.value?.siteName ?? 'Documentation');
+
+const ogType = computed(() => {
+  return props.currentPage?.type === 'document' ? 'article' : 'website';
+});
+
+const datePublished = computed(() => {
+  if (!props.currentPage) {
+    return '';
   }
-  const style = document.createElement('style');
-  style.setAttribute('nonce', cspNonce ?? '');
-  style.textContent = siteSettings.value?.theme?.customCss ?? '';
-  document.head.appendChild(style);
+  return new Date(props.currentPage.created_at).toISOString();
+});
+
+const dateModified = computed(() => {
+  if (!props.currentPage) {
+    return '';
+  }
+  const date =
+    props.currentPage.source === 'git' && props.currentPage.updated_at_git
+      ? props.currentPage.updated_at_git
+      : props.currentPage.updated_at;
+  return new Date(date).toISOString();
+});
+
+const jsonLd = computed(() => {
+  if (!props.currentPage || props.currentPage.type !== 'document') {
+    return null;
+  }
+
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: pageTitle.value,
+    description: pageDescription.value || undefined,
+    datePublished: datePublished.value,
+    dateModified: dateModified.value,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': canonicalUrl.value,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: siteName.value,
+    },
+  };
+
+  if (props.currentPage.git_last_author) {
+    schema['author'] = {
+      '@type': 'Person',
+      name: props.currentPage.git_last_author,
+    };
+  }
+
+  return JSON.stringify(schema);
+});
+
+let customStyleElement: HTMLStyleElement | null = null;
+let jsonLdScript: HTMLScriptElement | null = null;
+
+onMounted(() => {
+  // Inject custom CSS
+  if (siteSettings.value?.theme?.customCss) {
+    customStyleElement = document.createElement('style');
+    customStyleElement.setAttribute('nonce', cspNonce ?? '');
+    customStyleElement.textContent = siteSettings.value.theme.customCss;
+    document.head.appendChild(customStyleElement);
+  }
+
+  // Inject JSON-LD structured data
+  if (jsonLd.value) {
+    jsonLdScript = document.createElement('script');
+    jsonLdScript.type = 'application/ld+json';
+    jsonLdScript.setAttribute('nonce', cspNonce ?? '');
+    jsonLdScript.textContent = jsonLd.value;
+    document.head.appendChild(jsonLdScript);
+  }
+});
+
+onUnmounted(() => {
+  // Clean up custom CSS on page navigation
+  if (customStyleElement?.parentNode) {
+    customStyleElement.parentNode.removeChild(customStyleElement);
+  }
+
+  // Clean up JSON-LD script on page navigation
+  if (jsonLdScript?.parentNode) {
+    jsonLdScript.parentNode.removeChild(jsonLdScript);
+  }
 });
 </script>
 
@@ -126,6 +209,41 @@ onMounted(() => {
       v-if="siteSettings?.advanced?.metaRobots"
       name="robots"
       :content="siteSettings.advanced.metaRobots"
+    />
+
+    <!-- Canonical URL -->
+    <link v-if="canonicalUrl" rel="canonical" :href="canonicalUrl" />
+
+    <!-- OpenGraph Tags -->
+    <meta property="og:type" :content="ogType" />
+    <meta property="og:title" :content="pageTitle" />
+    <meta v-if="pageDescription" property="og:description" :content="pageDescription" />
+    <meta v-if="canonicalUrl" property="og:url" :content="canonicalUrl" />
+    <meta property="og:site_name" :content="siteName" />
+    <meta
+      v-if="currentPage?.type === 'document'"
+      property="article:published_time"
+      :content="datePublished"
+    />
+    <meta
+      v-if="currentPage?.type === 'document'"
+      property="article:modified_time"
+      :content="dateModified"
+    />
+    <meta
+      v-if="currentPage?.git_last_author"
+      property="article:author"
+      :content="currentPage.git_last_author"
+    />
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" :content="pageTitle" />
+    <meta v-if="pageDescription" name="twitter:description" :content="pageDescription" />
+    <meta
+      v-if="siteSettings?.social?.twitter"
+      name="twitter:site"
+      :content="`@${siteSettings.social.twitter.replace(/^@/, '')}`"
     />
   </Head>
 

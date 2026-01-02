@@ -1,13 +1,6 @@
 import type { ObjectDirective } from 'vue';
 
-/**
- * Retrieves the CSP nonce from the meta tag.
- * ```html
- * <meta name="csp-nonce" content="your-nonce-value">
- * ```
- * @returns {string | null} The CSP nonce value or null if not found
- * @since 1.0.0
- */
+/** Gets CSP nonce from `<meta name="csp-nonce">` tag. */
 function getCspNonce(): string | null {
   if (typeof document === 'undefined') {
     return null;
@@ -16,17 +9,7 @@ function getCspNonce(): string | null {
   return nonceMeta ? nonceMeta.getAttribute('content') : null;
 }
 
-/**
- * Escapes CSS selectors to prevent injection attacks.
- * @param {string} id - The CSS selector or ID to escape
- * @returns {string} The escaped CSS selector
- * @since 1.0.0
- * @example
- * ```typescript
- * escapeCssSelector('123'); // '\3 1 '
- * escapeCssSelector('element.class'); // 'element\.class'
- * ```
- */
+/** Escapes CSS selectors to prevent injection. Uses `CSS.escape` with manual fallback. */
 function escapeCssSelector(id: string): string {
   if (typeof CSS !== 'undefined' && CSS.escape) {
     return CSS.escape(id);
@@ -39,47 +22,24 @@ function escapeCssSelector(id: string): string {
     .replace(/([\0-\x1f\x7f-\x9f!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
 }
 
-/**
- * Validates CSS property names.
- * @param {string} prop - The CSS property name to validate
- * @returns {boolean} True if valid, false otherwise
- * @since 1.0.0
- * @example
- * ```typescript
- * isValidCssProperty('color'); // true
- * isValidCssProperty('--main-color'); // true
- * isValidCssProperty('invalid-prop!'); // false
- * ```
- */
+/** Validates CSS property names (standard properties and CSS variables). */
 function isValidCssProperty(prop: string): boolean {
   return /^--[\w-]+$/.test(prop) || /^[a-z][\w-]*$/i.test(prop);
 }
 
-/**
- * Sanitizes CSS values to prevent XSS attacks and CSS injection.
- * @param {string | number} value - The CSS value to sanitize
- * @returns {string} The sanitized CSS value
- * @since 1.0.0
- * @example
- * ```typescript
- * sanitizeCssValue('red'); // 'red'
- * sanitizeCssValue('javascript:alert(1)'); // '' (blocked)
- * sanitizeCssValue('12px'); // '12px'
- * ```
- */
+/** Sanitizes CSS values to prevent XSS and CSS injection. */
 function sanitizeCssValue(value: string | number): string {
   const strValue = String(value).trim();
 
-  // 1. Block known dangerous payloads immediately
   const dangerousPatterns = [
     /javascript:/gi,
     /vbscript:/gi,
     /data:text\/html/gi,
     /expression\s*\(/gi,
     /behavior\s*:/gi,
-    /on\w+\s*=/gi, // Event handlers
-    /<\/style/gi, // HTML breakout
-    /@import/gi, // External resource loading
+    /on\w+\s*=/gi,
+    /<\/style/gi,
+    /@import/gi,
   ];
 
   for (const pattern of dangerousPatterns) {
@@ -89,24 +49,21 @@ function sanitizeCssValue(value: string | number): string {
     }
   }
 
-  // Deep URL Validation
-  // Matches url('...') or url(...)
+  // URL Validation
   const urlMatch = strValue.match(/url\s*\((.*?)\)/i);
   if (urlMatch) {
-    // Extract inner content and strip quotes for protocol checking
     let url = urlMatch[1].trim();
     if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
       url = url.slice(1, -1).trim();
     }
 
-    // Only allow safe schemas (http, https, relative, data:image)
     if (!/^(https?:\/\/|\/|\.\/|data:image\/)/i.test(url)) {
       console.warn(`[vCspStyle] Blocked unsafe URL: ${url}`);
       return '';
     }
   }
 
-  // 3. Structural Sanitization
+  // Structural Sanitization
   // We allow quotes (") and (') but remove structural chars that allow injection breakouts:
   // ; (end property), { (start block), } (end block)
   // We also remove NULL bytes and control chars.
@@ -123,22 +80,12 @@ function sanitizeCssValue(value: string | number): string {
   return sanitized;
 }
 
-/**
- * Centralized style manager for CSP-compliant dynamic CSS injection.
- * Batches DOM updates to a single `<style>` tag.
- * @class StyleManager
- * @since 1.0.0
- */
+/** Manages CSP-compliant dynamic CSS injection via a single `<style>` tag. */
 class StyleManager {
   private styleElement: HTMLStyleElement | null = null;
   private styles = new Map<string, string>();
   private updateScheduled = false;
 
-  /**
-   * Ensures a style element exists with proper CSP nonce.
-   * @private
-   * @returns {HTMLStyleElement} The style element
-   */
   private ensureStyleElement(): HTMLStyleElement {
     if (!this.styleElement || !document.head.contains(this.styleElement)) {
       this.styleElement = document.createElement('style');
@@ -155,12 +102,6 @@ class StyleManager {
     return this.styleElement;
   }
 
-  /**
-   * Sets or updates CSS styles for an element ID.
-   * @param {string} id - The unique element identifier
-   * @param {string} cssText - The CSS declarations to apply
-   * @returns {void}
-   */
   setStyles(id: string, cssText: string): void {
     // Only schedule if actually changed
     if (this.styles.get(id) === cssText) {
@@ -171,22 +112,12 @@ class StyleManager {
     this.scheduleUpdate();
   }
 
-  /**
-   * Removes CSS styles for an element ID.
-   * @param {string} id - The unique element identifier
-   * @returns {void}
-   */
   removeStyles(id: string): void {
     if (this.styles.delete(id)) {
       this.scheduleUpdate();
     }
   }
 
-  /**
-   * Schedules style element update using requestAnimationFrame.
-   * @private
-   * @returns {void}
-   */
   private scheduleUpdate(): void {
     if (this.updateScheduled) {
       return;
@@ -199,11 +130,6 @@ class StyleManager {
     });
   }
 
-  /**
-   * Updates the style element with all current CSS rules.
-   * @private
-   * @returns {void}
-   */
   private updateStyleElement(): void {
     const styleEl = this.ensureStyleElement();
 
@@ -216,10 +142,6 @@ class StyleManager {
     styleEl.textContent = rules.join('\n');
   }
 
-  /**
-   * Clears all stored styles and removes the style element.
-   * @returns {void}
-   */
   clear(): void {
     this.styles.clear();
     if (this.styleElement?.parentNode) {
@@ -229,36 +151,11 @@ class StyleManager {
   }
 }
 
-/**
- * Global style manager instance for CSP-compliant dynamic styles.
- * @type {StyleManager}
- * @since 1.0.0
- * @example
- * ```typescript
- * import { styleManager } from '@/directives/vCspStyle';
- * styleManager.setStyles('my-element', 'color: red; font-size: 16px;');
- * styleManager.clear();
- * ```
- */
 const styleManager = new StyleManager();
 
-// Unique ID Management
 let idCounter = 0;
 const ID_PREFIX = 'v-csp-';
 
-/**
- * Performs shallow comparison of two style objects.
- * @param {Record<string, unknown> | null | undefined} a - First style object
- * @param {Record<string, unknown> | null | undefined} b - Second style object
- * @returns {boolean} True if objects are shallowly equal
- * @since 1.0.0
- * @example
- * ```typescript
- * isSameStyle({color: 'red'}, {color: 'red'}); // true
- * isSameStyle({color: 'red'}, {color: 'blue'}); // false
- * isSameStyle(null, null); // true
- * ```
- */
 function isSameStyle(
   a: Record<string, unknown> | null | undefined,
   b: Record<string, unknown> | null | undefined,
@@ -289,59 +186,34 @@ function isSameStyle(
  * Vue directive for CSP-compliant dynamic styles.
  * @example
  * ```vue
- * <div v-csp-style="{ color: 'red', fontSize: '16px' }">
- *   Styled content
- * </div>
+ * <div v-csp-style="{ color: 'red', fontSize: '16px' }">Content</div>
  * ```
- * @const {ObjectDirective<HTMLElement, Record<string, string | number>>} vCspStyle
- * @since 1.0.0
  */
 export const vCspStyle: ObjectDirective<HTMLElement, Record<string, string | number>> = {
-  /**
-   * Called when the directive is mounted.
-   * @param {HTMLElement} el - The element
-   * @param {import('vue').DirectiveBinding<Record<string, string | number>>} binding - The directive binding
-   * @returns {void}
-   */
   mounted(el, binding) {
     applyStyles(el, binding.value);
   },
 
-  /**
-   * Called when the binding value changes.
-   * @param {HTMLElement} el - The element
-   * @param {import('vue').DirectiveBinding<Record<string, string | number>>} binding - The directive binding
-   * @returns {void}
-   */
   updated(el, binding) {
     if (!isSameStyle(binding.value, binding.oldValue)) {
       applyStyles(el, binding.value);
     }
   },
 
-  /**
-   * Called when the element is unmounted.
-   * @param {HTMLElement} el - The element
-   * @returns {void}
-   */
   unmounted(el) {
     removeStyles(el);
   },
+
+  getSSRProps() {
+    return {};
+  },
 };
 
-/**
- * Applies CSS styles to an element using the CSP-compliant style manager.
- * @param {HTMLElement} el - The element to apply styles to
- * @param {Record<string, string | number> | undefined} styles - CSS properties and values
- * @returns {void}
- * @since 1.0.0
- */
 function applyStyles(el: HTMLElement, styles: Record<string, string | number> | undefined): void {
   if (typeof document === 'undefined') {
     return;
   }
 
-  // Cleanup if binding is empty
   if (!styles || Object.keys(styles).length === 0) {
     removeStyles(el);
     return;
@@ -366,7 +238,6 @@ function applyStyles(el: HTMLElement, styles: Record<string, string | number> | 
 
       const sanitizedValue = sanitizeCssValue(value);
       if (!sanitizedValue && value !== '') {
-        // Allow empty string resets if needed
         continue;
       }
 
@@ -385,12 +256,6 @@ function applyStyles(el: HTMLElement, styles: Record<string, string | number> | 
   }
 }
 
-/**
- * Removes CSS styles from an element.
- * @param {HTMLElement} el - The element to remove styles from
- * @returns {void}
- * @since 1.0.0
- */
 function removeStyles(el: HTMLElement): void {
   if (typeof document === 'undefined' || !el.id) {
     return;
@@ -399,14 +264,4 @@ function removeStyles(el: HTMLElement): void {
 }
 
 export { styleManager };
-/**
- * Default export of the vCspStyle directive.
- * @type {ObjectDirective<HTMLElement, Record<string, string | number>>}
- * @since 1.0.0
- * @example
- * ```typescript
- * import vCspStyle from '@/directives/vCspStyle';
- * app.directive('csp-style', vCspStyle);
- * ```
- */
 export default vCspStyle;
