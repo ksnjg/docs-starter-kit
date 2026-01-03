@@ -15,6 +15,8 @@ use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Middleware\RequireCmsMode;
+use App\Http\Middleware\RequireGitMode;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -25,6 +27,7 @@ Route::get('/', function () {
 // Setup Routes (no auth required - security handled in controller)
 Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
+Route::post('/setup/test-connection', [SetupController::class, 'testConnection'])->name('setup.test-connection');
 
 // Public Documentation Routes
 Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
@@ -87,18 +90,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin routes (rate limited)
     Route::prefix('admin')->name('admin.')->middleware('throttle:60,1')->group(function () {
-        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
-        Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
-        Route::post('pages', [PageController::class, 'store'])->name('pages.store');
-        Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
-        Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
-        Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
-        Route::post('pages/{page}/duplicate', [PageController::class, 'duplicate'])->name('pages.duplicate');
-        Route::post('pages/reorder', [PageController::class, 'reorder'])->name('pages.reorder');
-        Route::post('pages/{page}/move', [PageController::class, 'move'])->name('pages.move');
-        Route::post('pages/{page}/publish', [PageController::class, 'publish'])->name('pages.publish');
-        Route::post('pages/{page}/unpublish', [PageController::class, 'unpublish'])->name('pages.unpublish');
-        Route::post('pages/{page}/restore-version/{versionId}', [PageController::class, 'restoreVersion'])->name('pages.restore-version');
+        // Pages Management (CMS mode only - disabled when content_mode is 'git')
+        Route::middleware(RequireCmsMode::class)->group(function () {
+            Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+            Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
+            Route::post('pages', [PageController::class, 'store'])->name('pages.store');
+            Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
+            Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+            Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+            Route::post('pages/{page}/duplicate', [PageController::class, 'duplicate'])->name('pages.duplicate');
+            Route::post('pages/reorder', [PageController::class, 'reorder'])->name('pages.reorder');
+            Route::post('pages/{page}/move', [PageController::class, 'move'])->name('pages.move');
+            Route::post('pages/{page}/publish', [PageController::class, 'publish'])->name('pages.publish');
+            Route::post('pages/{page}/unpublish', [PageController::class, 'unpublish'])->name('pages.unpublish');
+            Route::post('pages/{page}/restore-version/{versionId}', [PageController::class, 'restoreVersion'])->name('pages.restore-version');
+        });
 
         // Media Management
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
@@ -136,11 +142,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('settings/advanced', [SiteSettingsController::class, 'advanced'])->name('settings.advanced');
         Route::put('settings/advanced', [SiteSettingsController::class, 'updateAdvanced'])->name('settings.advanced.update');
 
-        // Git Sync
-        Route::get('/git-sync', [GitSyncController::class, 'index'])->name('git-sync.index');
-        Route::post('/git-sync/manual', [GitSyncController::class, 'manualSync'])->name('git-sync.manual');
-        Route::post('/git-sync/test', [GitSyncController::class, 'testConnection'])->name('git-sync.test');
-        Route::put('/git-sync/config', [GitSyncController::class, 'updateConfig'])->name('git-sync.config');
-        Route::post('/git-sync/rollback/{sync}', [GitSyncController::class, 'rollback'])->name('git-sync.rollback');
+        // Git Sync (Git mode only - disabled when content_mode is 'cms')
+        Route::middleware(RequireGitMode::class)->group(function () {
+            Route::get('/git-sync', [GitSyncController::class, 'index'])->name('git-sync.index');
+            Route::post('/git-sync/manual', [GitSyncController::class, 'manualSync'])->name('git-sync.manual');
+            Route::post('/git-sync/test', [GitSyncController::class, 'testConnection'])->name('git-sync.test');
+            Route::put('/git-sync/config', [GitSyncController::class, 'updateConfig'])->name('git-sync.config');
+            Route::post('/git-sync/rollback/{sync}', [GitSyncController::class, 'rollback'])->name('git-sync.rollback');
+        });
+
     });
 });

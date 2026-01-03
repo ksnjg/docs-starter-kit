@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import type { ConnectionTestResult, GitConfigData } from '@/pages/setup/types';
-import { test as testConnection } from '@/routes/admin/git-sync';
+import { testConnection } from '@/routes/setup';
 import { router } from '@inertiajs/vue3';
 import {
   AlertCircle,
@@ -61,7 +61,7 @@ const handleTestConnection = () => {
       onSuccess: () => {
         testResult.value = { success: true, message: 'There you go!' };
       },
-      onError: (errors) => {
+      onError: (errors: Record<string, string>) => {
         testResult.value = {
           success: false,
           message:

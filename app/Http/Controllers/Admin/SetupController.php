@@ -6,16 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\SystemConfig;
 use App\Models\User;
+use App\Services\GitSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SetupController extends Controller
 {
+    public function __construct(
+        private GitSyncService $syncService
+    ) {}
+
     public function index(): Response|RedirectResponse
     {
         // Security: Redirect if already setup AND users exist
@@ -101,5 +107,42 @@ class SetupController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', 'Setup completed successfully!');
+    }
+
+    public function testConnection(Request $request): RedirectResponse
+    {
+        // Security: Only allow during setup
+        if (SystemConfig::isSetupCompleted() && User::count() > 0) {
+            abort(403, 'Setup already completed.');
+        }
+
+        $validated = $request->validate([
+            'git_repository_url' => 'required|url',
+            'git_branch' => 'required|string',
+            'git_access_token' => 'nullable|string',
+        ]);
+
+        try {
+            $success = $this->syncService->testConnection(
+                repositoryUrl: $validated['git_repository_url'],
+                branch: $validated['git_branch'],
+                token: $validated['git_access_token'] ?? null
+            );
+
+            if (! $success) {
+                throw ValidationException::withMessages([
+                    'git_repository_url' => 'Failed to connect to repository. Please check your URL, branch, and access token.',
+                ]);
+            }
+
+            return back()->with('success', 'Successfully connected to repository.');
+
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw ValidationException::withMessages([
+                'git_repository_url' => 'Connection error: '.$e->getMessage(),
+            ]);
+        }
     }
 }

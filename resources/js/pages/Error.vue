@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ErrorLayout from '@/layouts/ErrorLayout.vue';
-import { dashboard } from '@/routes';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { dashboard, home } from '@/routes';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 interface Props {
@@ -10,6 +10,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const page = usePage();
 
 interface ErrorType {
   title: string;
@@ -23,68 +25,64 @@ interface IconType {
 
 const errorTypes: Record<number, ErrorType> = {
   400: {
-    title: '400: Solicitud incorrecta',
-    description:
-      'Lo sentimos, tu solicitud contiene una sintaxis no válida y no se puede procesar.',
+    title: '400: Bad Request',
+    description: 'Sorry, your request contains invalid syntax and cannot be processed.',
   },
   401: {
-    title: '401: No autorizado',
-    description: 'Lo sentimos, necesitas estar autenticado para acceder a esta página.',
+    title: '401: Unauthorized',
+    description: 'Sorry, you need to be authenticated to access this page.',
   },
   403: {
-    title: '403: Prohibido',
-    description: 'Lo sentimos, no tienes permiso para acceder a esta página.',
+    title: '403: Forbidden',
+    description: 'Sorry, you do not have permission to access this page.',
   },
   404: {
-    title: '404: Página no encontrada',
-    description: 'Lo sentimos, la página que estás buscando no se pudo encontrar.',
+    title: '404: Page Not Found',
+    description: 'Sorry, the page you are looking for could not be found.',
   },
   405: {
-    title: '405: Método no permitido',
-    description: 'Lo sentimos, el método especificado en la solicitud no está permitido.',
+    title: '405: Method Not Allowed',
+    description: 'Sorry, the method specified in the request is not allowed.',
   },
   408: {
-    title: '408: Tiempo de espera agotado',
-    description: 'Lo sentimos, el servidor agotó el tiempo de espera de la solicitud.',
+    title: '408: Request Timeout',
+    description: 'Sorry, the server timed out waiting for the request.',
   },
   413: {
-    title: '413: Entidad demasiado grande',
-    description:
-      'Lo sentimos, la entidad de la solicitud es más grande que los límites definidos por el servidor.',
+    title: '413: Payload Too Large',
+    description: 'Sorry, the request entity is larger than limits defined by the server.',
   },
   422: {
-    title: '422: Entidad no procesable',
+    title: '422: Unprocessable Entity',
     description:
-      'Lo sentimos, la solicitud estaba bien formada pero no pudo procesarse por errores semánticos.',
+      'Sorry, the request was well-formed but could not be processed due to semantic errors.',
   },
   429: {
-    title: '429: Demasiadas solicitudes',
-    description: 'Lo sentimos, has enviado demasiadas solicitudes en un intervalo de tiempo.',
+    title: '429: Too Many Requests',
+    description: 'Sorry, you have sent too many requests in a given amount of time.',
   },
   500: {
-    title: '500: Error del servidor',
-    description: 'Ups, algo salió mal en nuestros servidores.',
+    title: '500: Server Error',
+    description: 'Oops, something went wrong on our servers.',
   },
   502: {
-    title: '502: Puerta de enlace incorrecta',
-    description:
-      'Lo sentimos, el servidor recibió una respuesta no válida del servidor ascendente.',
+    title: '502: Bad Gateway',
+    description: 'Sorry, the server received an invalid response from the upstream server.',
   },
   503: {
-    title: '503: Servicio no disponible',
-    description: 'Lo sentimos, estamos realizando mantenimiento. Por favor, inténtalo más tarde.',
+    title: '503: Service Unavailable',
+    description: 'Sorry, we are performing maintenance. Please try again later.',
   },
   504: {
-    title: '504: Tiempo de espera de la pasarela',
-    description:
-      'Lo sentimos, el servidor actuó como puerta de enlace y no recibió una respuesta a tiempo.',
+    title: '504: Gateway Timeout',
+    description: 'Sorry, the server acted as a gateway and did not receive a timely response.',
   },
 };
 
 const error = computed<ErrorType>(() => {
   const defaultError: ErrorType = errorTypes[props.status] || {
     title: `${props.status}: Error`,
-    description: 'Ocurrió un error inesperado.',
+    description: 'An unexpected error occurred.',
   };
 
   return {
@@ -93,13 +91,11 @@ const error = computed<ErrorType>(() => {
   };
 });
 
+const isAuthenticated = computed(() => !!(page.props.auth as { user?: unknown } | undefined)?.user);
+
 const isServerError = computed<boolean>(() => {
   return [500, 501, 502, 504].includes(props.status);
 });
-
-const handleGoBack = (): void => {
-  router.visit('/');
-};
 
 const iconType = computed<IconType>(() => {
   if (isServerError.value) {
@@ -200,21 +196,19 @@ const iconType = computed<IconType>(() => {
 
         <div class="flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            v-if="status !== 503"
+            v-if="isAuthenticated"
             :href="dashboard()"
             class="rounded-lg bg-gray-900 px-6 py-3 font-medium text-white transition-colors hover:bg-black focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 focus:outline-none dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
           >
-            Volver al inicio
+            Go to dashboard
           </Link>
-
-          <button
-            v-if="isServerError"
-            type="button"
-            class="rounded-lg border border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            @click="handleGoBack"
+          <Link
+            v-else
+            :href="home()"
+            class="rounded-lg bg-gray-900 px-6 py-3 font-medium text-white transition-colors hover:bg-black focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 focus:outline-none dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
           >
-            Volver
-          </button>
+            Go home
+          </Link>
         </div>
       </div>
     </div>

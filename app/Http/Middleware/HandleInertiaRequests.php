@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Setting;
+use App\Models\SystemConfig;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +37,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $config = SystemConfig::instance();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -50,6 +53,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'siteSettings' => fn () => $this->getSiteSettings(),
+            'content_mode' => $config->content_mode,
         ];
     }
 
