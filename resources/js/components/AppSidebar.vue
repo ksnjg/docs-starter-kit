@@ -45,34 +45,38 @@ const mainNavItems = computed<NavItem[]>(() => {
       href: dashboard(),
       icon: LayoutGrid,
     },
-    {
-      title: 'Pages',
-      href: pagesIndex(),
-      icon: FileText,
-    },
-    {
-      title: 'Media',
-      href: mediaIndex(),
-      icon: Image,
-    },
-    {
-      title: 'Feedback',
-      href: feedbackIndex(),
-      icon: MessageSquare,
-    },
   ];
 
   if (isAdmin.value) {
+    if (page.props.content_mode === 'cms') {
+      items.push({
+        title: 'Pages',
+        href: pagesIndex(),
+        icon: FileText,
+      });
+    }
+    items.push({
+      title: 'Media',
+      href: mediaIndex(),
+      icon: Image,
+    });
+    items.push({
+      title: 'Feedback',
+      href: feedbackIndex(),
+      icon: MessageSquare,
+    });
     items.push({
       title: 'Users',
       href: usersIndex(),
       icon: Users,
     });
-    items.push({
-      title: 'Git Sync',
-      href: gitSyncIndex(),
-      icon: GitPullRequest,
-    });
+    if (page.props.content_mode === 'git') {
+      items.push({
+        title: 'Git Sync',
+        href: gitSyncIndex(),
+        icon: GitPullRequest,
+      });
+    }
     items.push({
       title: 'Activity Logs',
       href: activityLogsIndex(),

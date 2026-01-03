@@ -97,6 +97,8 @@ class WebCronService
             'pending_jobs' => $this->getPendingJobsCount(),
             'failed_jobs' => $this->getFailedJobsCount(),
             'queue_driver' => config('queue.default'),
+            'base_path' => base_path(),
+            'php_binary' => $this->getPhpBinaryPath(),
         ];
     }
 
@@ -127,5 +129,23 @@ class WebCronService
         } catch (\Exception) {
             return -1;
         }
+    }
+
+    private function getPhpBinaryPath(): string
+    {
+        // PHP_BINARY returns Apache path when running as mod_php
+        // Check if it looks like a PHP CLI binary
+        if (str_contains(PHP_BINARY, 'php')) {
+            return PHP_BINARY;
+        }
+
+        // Try to find PHP in the same directory as PHP_BINDIR
+        $phpPath = PHP_BINDIR.DIRECTORY_SEPARATOR.'php'.(DIRECTORY_SEPARATOR === '\\' ? '.exe' : '');
+        if (file_exists($phpPath)) {
+            return $phpPath;
+        }
+
+        // Fallback to just 'php' and let the system PATH resolve it
+        return 'php';
     }
 }

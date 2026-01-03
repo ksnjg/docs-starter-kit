@@ -8,6 +8,8 @@ export interface ServerCompatibility {
   pending_jobs: number;
   failed_jobs: number;
   queue_driver: string;
+  base_path: string;
+  php_binary: string;
 }
 
 export interface WebCronSettings {

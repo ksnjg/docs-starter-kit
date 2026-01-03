@@ -124,13 +124,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
                     $rawMessage = $exception->getMessage();
                     if (! empty($rawMessage)) {
-                        // Sanitize
+                        // Sanitize the message
                         $message = htmlspecialchars($rawMessage, ENT_QUOTES, 'UTF-8');
-                        // Only show known safe error messages to avoid leaking internal details
-                        $safeMessages = ['not found', 'forbidden', 'unauthorized', 'method not allowed'];
-                        if (! in_array(strtolower($message), $safeMessages)) {
-                            $message = null;
-                        }
                     }
                 }
 

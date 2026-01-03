@@ -74,48 +74,33 @@ class GitSyncController extends Controller
 
     public function testConnection()
     {
-        try {
-            $validated = request()->validate([
-                'git_repository_url' => 'nullable|url',
-                'git_branch' => 'nullable|string',
-                'git_access_token' => 'nullable|string',
-            ]);
+        $validated = request()->validate([
+            'git_repository_url' => 'nullable|url',
+            'git_branch' => 'nullable|string',
+            'git_access_token' => 'nullable|string',
+        ]);
 
+        try {
             $success = $this->syncService->testConnection(
                 repositoryUrl: $validated['git_repository_url'] ?? null,
                 branch: $validated['git_branch'] ?? null,
                 token: $validated['git_access_token'] ?? null
             );
 
-            if (request()->wantsJson()) {
-                if ($success) {
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Successfully connected to repository',
-                    ]);
-                }
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to connect to repository',
-                ], 422);
+            if (! $success) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'git_repository_url' => 'Failed to connect to repository. Please check your settings.',
+                ]);
             }
 
-            if ($success) {
-                return back()->with('success', 'Successfully connected to repository.');
-            }
+            return back()->with('success', 'Successfully connected to repository.');
 
-            return back()->with('fail', 'Failed to connect to repository.');
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            if (request()->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 500);
-            }
-
-            return back()->with('fail', $e->getMessage());
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'git_repository_url' => $e->getMessage(),
+            ]);
         }
     }
 
