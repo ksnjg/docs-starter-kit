@@ -2,23 +2,5 @@
   "name": "Docs Starter Kit",
   "version": "1.0.0",
   "description": "An open-source starter kit for building modern documentation websites with Vue.js, Laravel, and TypeScript",
-  "repository": "https://github.com/crony-io/docs-starter-kit",
-  "navigation": [
-    {
-      "slug": "documentation",
-      "order": 1
-    },
-    {
-      "slug": "guides",
-      "order": 2
-    },
-    {
-      "slug": "api-reference",
-      "order": 3
-    },
-    {
-      "slug": "changelog",
-      "order": 4
-    }
-  ]
+  "repository": "https://github.com/crony-io/docs-starter-kit"
 }
