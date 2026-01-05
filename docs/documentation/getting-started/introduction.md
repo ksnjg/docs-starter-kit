@@ -8,9 +8,10 @@ status: published
 
 # Introduction
 
-Welcome to **Docs Starter Kit** - an open-source documentation platform built with Laravel, Vue.js, and TypeScript using Inertia.js.
+Welcome to **Docs Starter Kit** - an open-source documentation platform built with Laravel, Vue.js, and TypeScript, using Inertia.js.
 
 ## What is Docs Starter Kit?
+
 
 Docs Starter Kit is a modern, feature-rich documentation platform that you can clone and customize for your own projects. It provides everything you need to create beautiful, functional documentation websites.
 
@@ -56,20 +57,21 @@ Docs Starter Kit uses Inertia.js to combine the best of both worlds:
 ## Content Management Modes
 
 ### Git Mode
-Perfect for developers who prefer writing documentation in their favorite editor and managing content through Git workflows.
+Imagine you are a developer or a maintainer of the OWASP Project: you're faced with tons of info about new vulnerabilities probably each week, and you probably need to roll up your sleeves and start coding and documenting new ways to prevent them possibly within that same short amount of time.
 
-- Sync from GitHub repositories
-- Webhook support for instant updates
-- Version control through Git history
-- "Edit on GitHub" links
+If you belong to a team like that, where you must keep updating your Markdown documentation in your GitHub repository as soon as new info comes, or if you're a part of a dev team of just about any size for that matter, as long as you are already comfortable with using GitHub, then our Git Mode is for you.
+
+Git Mode lets you connect to your GitHub repository and automatically sync your documentation with each PR.
+It also supports Webhooks, so you can set up a GitHub Action that will notify the app that it needs to update the docs.
+
+
 
 ### CMS Mode
-Ideal for teams who prefer a visual editor and don't need Git-based workflows.
+Now imagine you are a copywriter, a product specialist or a video game fan building a guide, and you need to update your documentation to include new features or changes. You're probably a more visual person and you are more comfortable writing directly from an admin panel, draggin' and droppin' media files and looking at the final result as soon as you press _Save_. If so, then our CMS Mode is for you.
 
-- Visual WYSIWYG editor
-- Drag-and-drop organization
-- File manager with uploads
-- Version history in database
+CMS Mode lets you format your texts thanks to a built-in WYSIWYG editor, drag & drop pictures, videos and audio files and re-arrange your documentation pages as you like. All without looking at a single line of code (unless you consider Markdown to be code). Plus, your version history would be stored in the database, instead of Git.
+
+
 
 ## Next Steps
 
