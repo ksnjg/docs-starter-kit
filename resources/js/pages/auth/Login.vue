@@ -134,10 +134,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <AuthBase title="Sign in to your account" description="Enter your email and password to sign in">
+  <AuthBase title="Welcome to your account" description="Sign in with your email and password">
     <Head title="Sign in" />
 
-    <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
+    <div v-if="status" role="status" aria-live="polite" class="mb-4 text-center text-sm font-medium text-green-600">
       {{ status }}
     </div>
 
@@ -156,6 +156,9 @@ onUnmounted(() => {
       v-slot="{ errors, processing }"
       class="flex flex-col gap-6"
     >
+    <div v-if="processing" role="status" aria-live="polite" class="mb-4 text-center text-sm font-medium text-green-600">
+      Signing in...
+    </div>
       <div class="grid gap-6">
         <div class="grid gap-2">
           <Label for="email">Email</Label>
